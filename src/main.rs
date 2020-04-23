@@ -34,24 +34,29 @@ fn main() {
         .collect();
 
     doc.descendants()
-        .filter(|n| {
+        .filter_map(|n| {
             if let Some((ns, name)) = requirements.get(n.tag_name().name()) {
                 let ex_name = match ns {
                     Some(ns) => ExpandedName::from((*ns, *name)),
                     None => ExpandedName::from(*name),
                 };
 
-                !n.has_attribute(ex_name)
+                if !n.has_attribute(ex_name) {
+                    Some((n, ex_name))
+                } else {
+                    None
+                }
             } else {
-                false
+                None
             }
         })
-        .for_each(|n| {
+        .for_each(|(n, attr)| {
             println!(
-                "{}:{} {:?} missing ...", // TODO: Include missing attribute name
+                "{}:{} {:?} missing {} attribute",
                 path,
                 doc.text_pos_at(n.range().start),
-                n.tag_name()
+                n.tag_name(),
+                attr.name()
             )
         });
 }
