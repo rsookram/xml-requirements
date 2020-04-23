@@ -33,6 +33,7 @@ fn main() {
         })
         .collect();
 
+    let mut meets_requirements = true;
     doc.descendants()
         .filter_map(|n| {
             if let Some((ns, name)) = requirements.get(n.tag_name().name()) {
@@ -51,6 +52,8 @@ fn main() {
             }
         })
         .for_each(|(n, attr)| {
+            meets_requirements = false;
+
             println!(
                 "{}:{} {:?} missing {} attribute",
                 path,
@@ -59,4 +62,8 @@ fn main() {
                 attr.name()
             )
         });
+
+    if !meets_requirements {
+        std::process::exit(1);
+    }
 }
