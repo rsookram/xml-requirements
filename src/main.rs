@@ -42,10 +42,10 @@ fn main() {
                     None => ExpandedName::from(*name),
                 };
 
-                if !n.has_attribute(ex_name) {
-                    Some((n, ex_name))
-                } else {
+                if n.has_attribute(ex_name) {
                     None
+                } else {
+                    Some((n, ex_name))
                 }
             } else {
                 None
