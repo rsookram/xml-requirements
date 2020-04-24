@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 struct Attribute<'a>((Option<&'a str>, &'a str));
 
 fn main() {
+    // TODO: Allow 0 or more paths
     let path = std::env::args()
         .nth(1)
         .expect("missing required path to XML file");
@@ -20,6 +21,7 @@ fn main() {
         .filter_map(|ns| ns.name().map(|name| (name, ns.uri())))
         .collect();
 
+    // TODO: Parse from config, use something like TOML
     let requirements: BTreeMap<_, _> = vec![("LinearLayout", "android:orientation")]
         .into_iter()
         .map(|(tag, attr)| {
@@ -67,6 +69,7 @@ fn main() {
     }
 }
 
+// TODO: impl From?
 fn to_expanded_name<'a>(attr: &'a Attribute) -> ExpandedName<'a> {
     let Attribute((ns, name)) = attr;
 
