@@ -1,15 +1,21 @@
 use roxmltree::Document;
 use roxmltree::ExpandedName;
 use std::collections::BTreeMap;
+use std::path::PathBuf;
+use structopt::StructOpt;
+
+#[derive(StructOpt, Debug)]
+#[structopt(name = "xml-requirements")]
+struct Opt {
+    /// XML files to check
+    #[structopt(name = "FILE", parse(from_os_str))]
+    files: Vec<PathBuf>,
+}
 
 struct Attribute<'a>((Option<&'a str>, &'a str));
 
 fn main() {
-    // TODO: Use structopt
-    let mut args = std::env::args();
-    args.next();
-
-    let paths = args;
+    let opt = Opt::from_args();
 
     // TODO: Parse from config, use something like TOML
     let raw_requirements: Vec<(&str, Attribute)> = vec![("LinearLayout", "android:orientation")]
@@ -24,7 +30,7 @@ fn main() {
         .collect();
 
     let mut meets_requirements = true;
-    for path in paths {
+    for path in opt.files {
         let content = std::fs::read_to_string(&path).unwrap();
 
         let doc = Document::parse(&content).unwrap();
@@ -69,7 +75,7 @@ fn main() {
 
                 println!(
                     "{}:{} {} missing {} attribute",
-                    path,
+                    path.to_str().unwrap(),
                     doc.text_pos_at(n.range().start),
                     n.tag_name().name(),
                     attr.name()
