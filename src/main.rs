@@ -10,6 +10,18 @@ fn main() {
         .nth(1)
         .expect("missing required path to XML file");
 
+    // TODO: Parse from config, use something like TOML
+    let raw_requirements: Vec<(&str, Attribute)> = vec![("LinearLayout", "android:orientation")]
+        .iter()
+        .map(|(tag, attr)| {
+            let mut parts = attr.rsplitn(2, ':');
+            let name = parts.next().unwrap();
+            let ns = parts.next();
+
+            (*tag, Attribute((ns, name)))
+        })
+        .collect();
+
     let content = std::fs::read_to_string(&path).unwrap();
 
     let doc = Document::parse(&content).unwrap();
@@ -21,19 +33,17 @@ fn main() {
         .filter_map(|ns| ns.name().map(|name| (name, ns.uri())))
         .collect();
 
-    // TODO: Parse from config, use something like TOML
-    let requirements: BTreeMap<_, _> = vec![("LinearLayout", "android:orientation")]
-        .into_iter()
+    let requirements: BTreeMap<&str, Attribute> = raw_requirements
+        .iter()
         .map(|(tag, attr)| {
-            let mut parts = attr.rsplitn(2, ':');
-            let name = parts.next().unwrap();
-            let ns = parts.next().and_then(|ns| {
+            let Attribute((ns, name)) = attr;
+            let ns = ns.and_then(|ns| {
                 let resolved = namespaces.get(ns).copied();
 
                 resolved.or(Some(ns))
             });
 
-            (tag, Attribute((ns, name)))
+            (*tag, Attribute((ns, name)))
         })
         .collect();
 
