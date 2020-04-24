@@ -55,10 +55,10 @@ fn main() {
             meets_requirements = false;
 
             println!(
-                "{}:{} {:?} missing {} attribute",
+                "{}:{} {} missing {} attribute",
                 path,
                 doc.text_pos_at(n.range().start),
-                n.tag_name(),
+                n.tag_name().name(),
                 attr.name()
             )
         });
