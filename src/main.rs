@@ -7,6 +7,10 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "xml-requirements")]
 struct Opt {
+    /// Configuration file
+    #[structopt(short, long, parse(from_os_str))]
+    config: PathBuf,
+
     /// XML files to check
     #[structopt(name = "FILE", parse(from_os_str))]
     files: Vec<PathBuf>,
