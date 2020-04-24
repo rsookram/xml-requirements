@@ -2,6 +2,8 @@ use roxmltree::Document;
 use roxmltree::ExpandedName;
 use std::collections::BTreeMap;
 
+struct Attribute<'a>((Option<&'a str>, &'a str));
+
 fn main() {
     let path = std::env::args()
         .nth(1)
@@ -29,18 +31,15 @@ fn main() {
                 resolved.or(Some(ns))
             });
 
-            (tag, (ns, name))
+            (tag, Attribute((ns, name)))
         })
         .collect();
 
     let mut meets_requirements = true;
     doc.descendants()
         .filter_map(|n| {
-            if let Some((ns, name)) = requirements.get(n.tag_name().name()) {
-                let ex_name = match ns {
-                    Some(ns) => ExpandedName::from((*ns, *name)),
-                    None => ExpandedName::from(*name),
-                };
+            if let Some(attr) = requirements.get(n.tag_name().name()) {
+                let ex_name = to_expanded_name(attr);
 
                 if n.has_attribute(ex_name) {
                     None
@@ -65,5 +64,14 @@ fn main() {
 
     if !meets_requirements {
         std::process::exit(1);
+    }
+}
+
+fn to_expanded_name<'a>(attr: &'a Attribute) -> ExpandedName<'a> {
+    let Attribute((ns, name)) = attr;
+
+    match ns {
+        Some(ns) => ExpandedName::from((*ns, *name)),
+        None => ExpandedName::from(*name),
     }
 }
