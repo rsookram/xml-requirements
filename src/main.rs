@@ -29,7 +29,23 @@ struct Requirement {
     attributes: Vec<String>,
 }
 
-struct Attribute<'a>((Option<&'a str>, &'a str));
+struct Attribute {
+    ns: Option<String>,
+    name: String,
+}
+
+impl Attribute {
+    fn from_str(s: &str) -> Self {
+        let mut parts = s.rsplitn(2, ':');
+        let name = parts.next().unwrap();
+        let ns = parts.next().map(std::string::ToString::to_string);
+
+        Attribute {
+            ns,
+            name: name.to_string(),
+        }
+    }
+}
 
 fn main() {
     let opt = Opt::from_args();
@@ -41,13 +57,7 @@ fn main() {
         .required
         .iter()
         .flat_map(|(tag, req)| req.attributes.iter().map(move |v| (tag, v)))
-        .map(|(tag, attr)| {
-            let mut parts = attr.rsplitn(2, ':');
-            let name = parts.next().unwrap();
-            let ns = parts.next();
-
-            (tag.as_str(), Attribute((ns, name)))
-        })
+        .map(|(tag, attr)| (tag.as_str(), Attribute::from_str(attr)))
         .collect();
 
     let mut meets_requirements = true;
@@ -67,16 +77,16 @@ fn main() {
         raw_requirements
             .iter()
             .map(|(tag, attr)| {
-                let Attribute((ns, name)) = attr;
-                let ns = ns.and_then(|ns| {
-                    let resolved = namespaces.get(ns).copied();
+                let ns = attr.ns.as_ref().and_then(|ns| {
+                    let resolved = namespaces.get(ns.as_str()).copied();
 
-                    resolved.or(Some(ns))
+                    resolved.or(Some(&ns))
                 });
 
+                let name = attr.name.as_str();
                 let expanded_name = match ns {
-                    Some(ns) => ExpandedName::from((ns, *name)),
-                    None => ExpandedName::from(*name),
+                    Some(ns) => ExpandedName::from((ns, name)),
+                    None => ExpandedName::from(name),
                 };
 
                 (*tag, expanded_name)
