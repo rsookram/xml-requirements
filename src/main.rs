@@ -1,10 +1,9 @@
-use attribute::Attribute;
+mod config;
+
+use config::Attribute;
 use roxmltree::Document;
 use roxmltree::ExpandedName;
-use serde::Deserialize;
-use serde::Deserializer;
 use std::collections::BTreeMap;
-use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -21,59 +20,11 @@ struct Opt {
     files: Vec<PathBuf>,
 }
 
-#[derive(Deserialize)]
-struct Config {
-    required: HashMap<String, Requirement>,
-}
-
-#[derive(Deserialize)]
-struct Requirement {
-    #[serde(deserialize_with = "vec_attribute")]
-    attributes: Vec<Attribute>,
-}
-
-fn vec_attribute<'de, D>(deserializer: D) -> Result<Vec<Attribute>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    #[derive(Deserialize)]
-    struct Wrapper(#[serde(with = "attribute")] Attribute);
-
-    let v = Vec::deserialize(deserializer)?;
-    Ok(v.into_iter().map(|Wrapper(a)| a).collect())
-}
-
-mod attribute {
-    use serde::Deserialize;
-    use serde::Deserializer;
-
-    pub struct Attribute {
-        pub ns: Option<String>,
-        pub name: String,
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Attribute, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-
-        let mut parts = s.rsplitn(2, ':');
-        let name = parts.next().unwrap();
-        let ns = parts.next().map(std::string::ToString::to_string);
-
-        Ok(Attribute {
-            ns,
-            name: name.to_string(),
-        })
-    }
-}
-
 fn main() {
     let opt = Opt::from_args();
 
     let conf_str = fs::read_to_string(&opt.config).unwrap();
-    let config: Config = toml::from_str(&conf_str).unwrap();
+    let config = config::from_str(&conf_str);
 
     let raw_requirements: Vec<(&str, &Attribute)> = config
         .required
