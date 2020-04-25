@@ -1,6 +1,8 @@
 use roxmltree::Document;
 use roxmltree::ExpandedName;
+use serde::Deserialize;
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -17,27 +19,28 @@ struct Opt {
     files: Vec<PathBuf>,
 }
 
+#[derive(Deserialize)]
+struct Config {
+    required: HashMap<String, Requirement>,
+}
+
+#[derive(Deserialize)]
+struct Requirement {
+    attributes: Vec<String>,
+}
+
 struct Attribute<'a>((Option<&'a str>, &'a str));
 
 fn main() {
     let opt = Opt::from_args();
 
     let conf_str = fs::read_to_string(&opt.config).unwrap();
-    let config = conf_str.parse::<toml::Value>().unwrap();
+    let config: Config = toml::from_str(&conf_str).unwrap();
 
-    let raw_requirements: Vec<(&str, Attribute)> = config["required"]
-        .as_table()
-        .unwrap()
+    let raw_requirements: Vec<(&str, Attribute)> = config
+        .required
         .iter()
-        .flat_map(|(tag, value)| {
-            let values = value.as_table().unwrap();
-
-            values["attributes"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(move |v| (tag, v.as_str().unwrap()))
-        })
+        .flat_map(|(tag, req)| req.attributes.iter().map(move |v| (tag, v)))
         .map(|(tag, attr)| {
             let mut parts = attr.rsplitn(2, ':');
             let name = parts.next().unwrap();
@@ -113,7 +116,6 @@ fn main() {
     }
 }
 
-// TODO: impl From?
 fn to_expanded_name<'a>(attr: &'a Attribute) -> ExpandedName<'a> {
     let Attribute((ns, name)) = attr;
 
