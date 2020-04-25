@@ -1,6 +1,7 @@
 use roxmltree::Document;
 use roxmltree::ExpandedName;
 use std::collections::BTreeMap;
+use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -21,21 +22,34 @@ struct Attribute<'a>((Option<&'a str>, &'a str));
 fn main() {
     let opt = Opt::from_args();
 
-    // TODO: Parse from config, use something like TOML
-    let raw_requirements: Vec<(&str, Attribute)> = vec![("LinearLayout", "android:orientation")]
+    let conf_str = fs::read_to_string(&opt.config).unwrap();
+    let config = conf_str.parse::<toml::Value>().unwrap();
+
+    let raw_requirements: Vec<(&str, Attribute)> = config["required"]
+        .as_table()
+        .unwrap()
         .iter()
+        .flat_map(|(tag, value)| {
+            let values = value.as_table().unwrap();
+
+            values["attributes"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(move |v| (tag, v.as_str().unwrap()))
+        })
         .map(|(tag, attr)| {
             let mut parts = attr.rsplitn(2, ':');
             let name = parts.next().unwrap();
             let ns = parts.next();
 
-            (*tag, Attribute((ns, name)))
+            (tag.as_str(), Attribute((ns, name)))
         })
         .collect();
 
     let mut meets_requirements = true;
     for path in opt.files {
-        let content = std::fs::read_to_string(&path).unwrap();
+        let content = fs::read_to_string(&path).unwrap();
 
         let doc = Document::parse(&content).unwrap();
 
