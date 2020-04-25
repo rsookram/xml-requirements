@@ -34,13 +34,6 @@ fn main() {
 
         let doc = Document::parse(&content).unwrap();
 
-        let namespaces: BTreeMap<_, _> = doc
-            .root_element()
-            .namespaces()
-            .iter()
-            .filter_map(|ns| ns.name().map(|name| (name, ns.uri())))
-            .collect();
-
         let requirements: BTreeMap<_, _> = config
             .required
             .iter()
@@ -48,7 +41,7 @@ fn main() {
                 let names: Vec<_> = req
                     .attributes
                     .iter()
-                    .map(|attr| resolve(attr, &namespaces))
+                    .map(|attr| resolve(attr, &doc))
                     .collect();
 
                 (tag.to_string(), names)
@@ -78,12 +71,11 @@ fn main() {
     }
 }
 
-fn resolve<'a>(attr: &'a Attribute, namespaces: &'a BTreeMap<&str, &str>) -> ExpandedName<'a> {
-    let ns = attr.ns.as_ref().and_then(|ns| {
-        let resolved = namespaces.get(ns.as_str()).copied();
-
-        resolved.or(Some(&ns))
-    });
+fn resolve<'a>(attr: &'a Attribute, doc: &'a Document) -> ExpandedName<'a> {
+    let ns = attr
+        .ns
+        .as_ref()
+        .and_then(|ns| doc.root_element().lookup_namespace_uri(Some(ns)));
 
     let name = attr.name.as_str();
     match ns {
