@@ -1,4 +1,5 @@
 mod config;
+mod violation;
 
 use config::Attribute;
 use roxmltree::Document;
@@ -7,6 +8,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use violation::Violation;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "xml-requirements")]
@@ -63,16 +65,11 @@ fn main() {
             })
             .flat_map(|(n, attrs)| attrs.iter().map(move |attr| (n, attr)))
             .filter(|(n, &ex_name)| !n.has_attribute(ex_name))
-            .for_each(|(n, attr)| {
+            .map(|(n, attr)| Violation::new(&path, &doc, &n, attr.name()))
+            .for_each(|violation| {
                 meets_requirements = false;
 
-                println!(
-                    "{}:{} {} missing {} attribute",
-                    path.to_str().unwrap(),
-                    doc.text_pos_at(n.range().start),
-                    n.tag_name().name(),
-                    attr.name()
-                )
+                println!("{}", violation)
             });
     }
 
