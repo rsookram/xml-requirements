@@ -49,21 +49,7 @@ fn main() {
         let mut requirements = BTreeMap::new();
         raw_requirements
             .iter()
-            .map(|(tag, attr)| {
-                let ns = attr.ns.as_ref().and_then(|ns| {
-                    let resolved = namespaces.get(ns.as_str()).copied();
-
-                    resolved.or(Some(&ns))
-                });
-
-                let name = attr.name.as_str();
-                let expanded_name = match ns {
-                    Some(ns) => ExpandedName::from((ns, name)),
-                    None => ExpandedName::from(name),
-                };
-
-                (*tag, expanded_name)
-            })
+            .map(|(tag, attr)| (*tag, resolve(attr, &namespaces)))
             .for_each(|(tag, attr)| {
                 let attrs = requirements.entry(tag).or_insert_with(|| vec![]);
                 attrs.push(attr);
@@ -94,5 +80,19 @@ fn main() {
 
     if !meets_requirements {
         std::process::exit(1);
+    }
+}
+
+fn resolve<'a>(attr: &'a Attribute, namespaces: &'a BTreeMap<&str, &str>) -> ExpandedName<'a> {
+    let ns = attr.ns.as_ref().and_then(|ns| {
+        let resolved = namespaces.get(ns.as_str()).copied();
+
+        resolved.or(Some(&ns))
+    });
+
+    let name = attr.name.as_str();
+    match ns {
+        Some(ns) => ExpandedName::from((ns, name)),
+        None => ExpandedName::from(name),
     }
 }
