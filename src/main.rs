@@ -1,6 +1,8 @@
+use attribute::Attribute;
 use roxmltree::Document;
 use roxmltree::ExpandedName;
 use serde::Deserialize;
+use serde::Deserializer;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs;
@@ -26,24 +28,44 @@ struct Config {
 
 #[derive(Deserialize)]
 struct Requirement {
-    attributes: Vec<String>,
+    #[serde(deserialize_with = "vec_attribute")]
+    attributes: Vec<Attribute>,
 }
 
-struct Attribute {
-    ns: Option<String>,
-    name: String,
+fn vec_attribute<'de, D>(deserializer: D) -> Result<Vec<Attribute>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    struct Wrapper(#[serde(with = "attribute")] Attribute);
+
+    let v = Vec::deserialize(deserializer)?;
+    Ok(v.into_iter().map(|Wrapper(a)| a).collect())
 }
 
-impl Attribute {
-    fn from_str(s: &str) -> Self {
+mod attribute {
+    use serde::Deserialize;
+    use serde::Deserializer;
+
+    pub struct Attribute {
+        pub ns: Option<String>,
+        pub name: String,
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Attribute, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+
         let mut parts = s.rsplitn(2, ':');
         let name = parts.next().unwrap();
         let ns = parts.next().map(std::string::ToString::to_string);
 
-        Attribute {
+        Ok(Attribute {
             ns,
             name: name.to_string(),
-        }
+        })
     }
 }
 
@@ -53,11 +75,11 @@ fn main() {
     let conf_str = fs::read_to_string(&opt.config).unwrap();
     let config: Config = toml::from_str(&conf_str).unwrap();
 
-    let raw_requirements: Vec<(&str, Attribute)> = config
+    let raw_requirements: Vec<(&str, &Attribute)> = config
         .required
         .iter()
         .flat_map(|(tag, req)| req.attributes.iter().map(move |v| (tag, v)))
-        .map(|(tag, attr)| (tag.as_str(), Attribute::from_str(attr)))
+        .map(|(tag, attr)| (tag.as_str(), attr))
         .collect();
 
     let mut meets_requirements = true;
