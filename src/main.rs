@@ -60,7 +60,8 @@ fn main() {
             .filter_map(|ns| ns.name().map(|name| (name, ns.uri())))
             .collect();
 
-        let requirements: BTreeMap<&str, Attribute> = raw_requirements
+        let mut requirements = BTreeMap::new();
+        raw_requirements
             .iter()
             .map(|(tag, attr)| {
                 let Attribute((ns, name)) = attr;
@@ -72,20 +73,26 @@ fn main() {
 
                 (*tag, Attribute((ns, name)))
             })
-            .collect();
+            .for_each(|(tag, attr)| {
+                let attrs = requirements.entry(tag).or_insert(vec![]);
+                attrs.push(attr);
+            });
 
         doc.descendants()
             .filter_map(|n| {
-                if let Some(attr) = requirements.get(n.tag_name().name()) {
-                    let ex_name = to_expanded_name(attr);
-
-                    if n.has_attribute(ex_name) {
-                        None
-                    } else {
-                        Some((n, ex_name))
-                    }
+                if let Some(attrs) = requirements.get(n.tag_name().name()) {
+                    Some((n, attrs))
                 } else {
                     None
+                }
+            })
+            .flat_map(|(n, attrs)| attrs.iter().map(move |attr| (n, attr)))
+            .filter_map(|(n, attr)| {
+                let ex_name = to_expanded_name(attr);
+                if n.has_attribute(ex_name) {
+                    None
+                } else {
+                    Some((n, ex_name))
                 }
             })
             .for_each(|(n, attr)| {
