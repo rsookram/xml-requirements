@@ -74,7 +74,7 @@ fn main() {
                 (*tag, Attribute((ns, name)))
             })
             .for_each(|(tag, attr)| {
-                let attrs = requirements.entry(tag).or_insert(vec![]);
+                let attrs = requirements.entry(tag).or_insert_with(|| vec![]);
                 attrs.push(attr);
             });
 
