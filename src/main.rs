@@ -26,13 +26,6 @@ fn main() {
     let conf_str = fs::read_to_string(&opt.config).unwrap();
     let config = config::from_str(&conf_str);
 
-    let raw_requirements: Vec<(&str, &Attribute)> = config
-        .required
-        .iter()
-        .flat_map(|(tag, req)| req.attributes.iter().map(move |v| (tag, v)))
-        .map(|(tag, attr)| (tag.as_str(), attr))
-        .collect();
-
     let mut meets_requirements = true;
     for path in opt.files {
         let content = fs::read_to_string(&path).unwrap();
@@ -46,14 +39,19 @@ fn main() {
             .filter_map(|ns| ns.name().map(|name| (name, ns.uri())))
             .collect();
 
-        let mut requirements = BTreeMap::new();
-        raw_requirements
+        let requirements: BTreeMap<_, _> = config
+            .required
             .iter()
-            .map(|(tag, attr)| (*tag, resolve(attr, &namespaces)))
-            .for_each(|(tag, attr)| {
-                let attrs = requirements.entry(tag).or_insert_with(|| vec![]);
-                attrs.push(attr);
-            });
+            .map(|(tag, req)| {
+                let names: Vec<_> = req
+                    .attributes
+                    .iter()
+                    .map(|attr| resolve(attr, &namespaces))
+                    .collect();
+
+                (tag.to_string(), names)
+            })
+            .collect();
 
         doc.descendants()
             .filter_map(|n| {
