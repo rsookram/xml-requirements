@@ -74,7 +74,12 @@ fn main() {
                     resolved.or(Some(ns))
                 });
 
-                (*tag, Attribute((ns, name)))
+                let expanded_name = match ns {
+                    Some(ns) => ExpandedName::from((ns, *name)),
+                    None => ExpandedName::from(*name),
+                };
+
+                (*tag, expanded_name)
             })
             .for_each(|(tag, attr)| {
                 let attrs = requirements.entry(tag).or_insert_with(|| vec![]);
@@ -90,14 +95,7 @@ fn main() {
                 }
             })
             .flat_map(|(n, attrs)| attrs.iter().map(move |attr| (n, attr)))
-            .filter_map(|(n, attr)| {
-                let ex_name = to_expanded_name(attr);
-                if n.has_attribute(ex_name) {
-                    None
-                } else {
-                    Some((n, ex_name))
-                }
-            })
+            .filter(|(n, &ex_name)| !n.has_attribute(ex_name))
             .for_each(|(n, attr)| {
                 meets_requirements = false;
 
@@ -113,14 +111,5 @@ fn main() {
 
     if !meets_requirements {
         std::process::exit(1);
-    }
-}
-
-fn to_expanded_name<'a>(attr: &'a Attribute) -> ExpandedName<'a> {
-    let Attribute((ns, name)) = attr;
-
-    match ns {
-        Some(ns) => ExpandedName::from((*ns, *name)),
-        None => ExpandedName::from(*name),
     }
 }
