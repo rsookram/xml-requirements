@@ -4,6 +4,7 @@ mod violation;
 use config::Attribute;
 use roxmltree::Document;
 use roxmltree::ExpandedName;
+use roxmltree::Node;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
@@ -48,25 +49,7 @@ fn main() {
             .collect();
 
         doc.descendants()
-            .flat_map(|n| {
-                let tag = n.tag_name().name();
-                let n_start = n.range().start;
-                let doc = &doc;
-
-                requirements
-                    .get(tag)
-                    .into_iter()
-                    .flatten()
-                    .filter_map(move |&ex_name| {
-                        if n.has_attribute(ex_name) {
-                            None
-                        } else {
-                            let pos = doc.text_pos_at(n_start);
-
-                            Some(Violation::new(path, pos.row, pos.col, tag, ex_name.name()))
-                        }
-                    })
-            })
+            .flat_map(|n| find_violations(path, &doc, &n, &requirements))
             .for_each(|violation| {
                 meets_requirements = false;
 
@@ -77,6 +60,31 @@ fn main() {
     if !meets_requirements {
         std::process::exit(1);
     }
+}
+
+fn find_violations(
+    path: &PathBuf,
+    doc: &Document,
+    node: &Node,
+    requirements: &BTreeMap<&str, Vec<ExpandedName>>,
+) -> Vec<Violation> {
+    let tag = node.tag_name().name();
+    let n_start = node.range().start;
+
+    requirements
+        .get(tag)
+        .into_iter()
+        .flatten()
+        .filter_map(move |&ex_name| {
+            if node.has_attribute(ex_name) {
+                None
+            } else {
+                let pos = doc.text_pos_at(n_start);
+
+                Some(Violation::new(path, pos.row, pos.col, tag, ex_name.name()))
+            }
+        })
+        .collect()
 }
 
 fn resolve<'a>(attr: &'a Attribute, doc: &'a Document) -> ExpandedName<'a> {
