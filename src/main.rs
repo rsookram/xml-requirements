@@ -2,6 +2,7 @@ mod config;
 mod violation;
 
 use config::Attribute;
+use config::Rule;
 use roxmltree::Document;
 use roxmltree::ExpandedName;
 use roxmltree::Node;
@@ -40,18 +41,7 @@ fn main() {
 
         let doc = Document::parse(&content).unwrap();
 
-        let requirements: BTreeMap<_, _> = config
-            .iter()
-            .map(|(tag, rule)| {
-                let names: Vec<_> = rule
-                    .required
-                    .iter()
-                    .map(|attr| resolve(attr, &doc))
-                    .collect();
-
-                (tag.as_str(), names)
-            })
-            .collect();
+        let requirements = get_requirements(&config, &doc);
 
         doc.descendants()
             .flat_map(|n| find_violations(path, &doc, &n, &requirements))
@@ -64,6 +54,42 @@ fn main() {
 
     if !meets_requirements {
         std::process::exit(1);
+    }
+}
+
+fn get_requirements<'a>(
+    config: &'a BTreeMap<String, Rule>,
+    doc: &'a Document,
+) -> BTreeMap<&'a str, Vec<ResolvedName<'a>>> {
+    config
+        .iter()
+        .map(|(tag, rule)| {
+            let names: Vec<_> = rule
+                .required
+                .iter()
+                .map(|attr| resolve(attr, doc))
+                .collect();
+
+            (tag.as_str(), names)
+        })
+        .collect()
+}
+
+fn resolve<'a>(attr: &'a Attribute, doc: &'a Document) -> ResolvedName<'a> {
+    let ns = attr
+        .ns
+        .as_ref()
+        .and_then(|ns| doc.root_element().lookup_namespace_uri(Some(ns)));
+
+    let name = attr.name.as_str();
+    let expanded = match ns {
+        Some(ns) => ExpandedName::from((ns, name)),
+        None => ExpandedName::from(name),
+    };
+
+    ResolvedName {
+        raw: attr.raw.to_string(),
+        expanded,
     }
 }
 
@@ -90,22 +116,4 @@ fn find_violations(
             }
         })
         .collect()
-}
-
-fn resolve<'a>(attr: &'a Attribute, doc: &'a Document) -> ResolvedName<'a> {
-    let ns = attr
-        .ns
-        .as_ref()
-        .and_then(|ns| doc.root_element().lookup_namespace_uri(Some(ns)));
-
-    let name = attr.name.as_str();
-    let expanded = match ns {
-        Some(ns) => ExpandedName::from((ns, name)),
-        None => ExpandedName::from(name),
-    };
-
-    ResolvedName {
-        raw: attr.raw.to_string(),
-        expanded,
-    }
 }
