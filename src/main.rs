@@ -35,11 +35,10 @@ fn main() {
         let doc = Document::parse(&content).unwrap();
 
         let requirements: BTreeMap<_, _> = config
-            .required
             .iter()
-            .map(|(tag, req)| {
-                let names: Vec<_> = req
-                    .attributes
+            .map(|(tag, rule)| {
+                let names: Vec<_> = rule
+                    .required
                     .iter()
                     .map(|attr| resolve(attr, &doc))
                     .collect();

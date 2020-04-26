@@ -2,19 +2,14 @@ use serde::Deserialize;
 use serde::Deserializer;
 use std::collections::BTreeMap;
 
-pub fn from_str(s: &str) -> Config {
+pub fn from_str(s: &str) -> BTreeMap<String, Rule> {
     toml::from_str(s).unwrap()
 }
 
 #[derive(Deserialize)]
-pub struct Config {
-    pub required: BTreeMap<String, Requirement>,
-}
-
-#[derive(Deserialize)]
-pub struct Requirement {
+pub struct Rule {
     #[serde(deserialize_with = "vec_attribute")]
-    pub attributes: Vec<Attribute>,
+    pub required: Vec<Attribute>,
 }
 
 pub struct Attribute {
