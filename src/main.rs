@@ -44,7 +44,7 @@ fn main() {
         let requirements = get_requirements(&config, &doc);
 
         doc.descendants()
-            .flat_map(|n| find_violations(path, &doc, &n, &requirements))
+            .flat_map(|n| find_violations(path, &n, &requirements))
             .for_each(|violation| {
                 meets_requirements = false;
 
@@ -95,7 +95,6 @@ fn resolve<'a>(attr: &'a Attribute, doc: &'a Document) -> ResolvedName<'a> {
 
 fn find_violations(
     path: &PathBuf,
-    doc: &Document,
     node: &Node,
     requirements: &BTreeMap<&str, Vec<ResolvedName>>,
 ) -> Vec<Violation> {
@@ -110,7 +109,7 @@ fn find_violations(
             if node.has_attribute(name.expanded) {
                 None
             } else {
-                let pos = doc.text_pos_at(n_start);
+                let pos = node.document().text_pos_at(n_start);
 
                 Some(Violation::new(path, pos.row, pos.col, tag, &name.raw))
             }
