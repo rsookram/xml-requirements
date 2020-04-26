@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use serde::Deserializer;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub fn from_str(s: &str) -> Config {
     toml::from_str(s).unwrap()
@@ -8,7 +8,7 @@ pub fn from_str(s: &str) -> Config {
 
 #[derive(Deserialize)]
 pub struct Config {
-    pub required: HashMap<String, Requirement>,
+    pub required: BTreeMap<String, Requirement>,
 }
 
 #[derive(Deserialize)]
