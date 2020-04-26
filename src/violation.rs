@@ -1,4 +1,3 @@
-use roxmltree::Document;
 use std::fmt;
 use std::path::PathBuf;
 
@@ -13,17 +12,16 @@ pub struct Violation {
 impl Violation {
     pub fn new(
         path: &PathBuf,
-        doc: &Document,
-        node: &roxmltree::Node,
+        line_num: u32,
+        col_num: u32,
+        tag: &str,
         attribute: &str,
     ) -> Violation {
-        let pos = doc.text_pos_at(node.range().start);
-
         Violation {
             path: path.clone(),
-            line_num: pos.row,
-            col_num: pos.col,
-            tag: node.tag_name().name().to_string(),
+            line_num,
+            col_num,
+            tag: tag.to_string(),
             attribute: attribute.to_string(),
         }
     }

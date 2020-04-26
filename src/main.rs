@@ -57,7 +57,12 @@ fn main() {
             })
             .flat_map(|(n, attrs)| attrs.iter().map(move |attr| (n, attr)))
             .filter(|(n, &ex_name)| !n.has_attribute(ex_name))
-            .map(|(n, attr)| Violation::new(&path, &doc, &n, attr.name()))
+            .map(|(n, attr)| {
+                let pos = doc.text_pos_at(n.range().start);
+                let tag = n.tag_name().name();
+
+                Violation::new(&path, pos.row, pos.col, tag, attr.name())
+            })
             .for_each(|violation| {
                 meets_requirements = false;
 
