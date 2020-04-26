@@ -44,7 +44,7 @@ fn main() {
                     .map(|attr| resolve(attr, &doc))
                     .collect();
 
-                (tag.to_string(), names)
+                (tag.as_str(), names)
             })
             .collect();
 
