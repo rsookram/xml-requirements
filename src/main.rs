@@ -29,7 +29,7 @@ fn main() {
     let config = config::from_str(&conf_str);
 
     let mut meets_requirements = true;
-    for path in opt.files {
+    for path in &opt.files {
         let content = fs::read_to_string(&path).unwrap();
 
         let doc = Document::parse(&content).unwrap();
@@ -48,20 +48,24 @@ fn main() {
             .collect();
 
         doc.descendants()
-            .filter_map(|n| {
-                if let Some(attrs) = requirements.get(n.tag_name().name()) {
-                    Some((n, attrs))
-                } else {
-                    None
-                }
-            })
-            .flat_map(|(n, attrs)| attrs.iter().map(move |attr| (n, attr)))
-            .filter(|(n, &ex_name)| !n.has_attribute(ex_name))
-            .map(|(n, attr)| {
-                let pos = doc.text_pos_at(n.range().start);
+            .flat_map(|n| {
                 let tag = n.tag_name().name();
+                let n_start = n.range().start;
+                let doc = &doc;
 
-                Violation::new(&path, pos.row, pos.col, tag, attr.name())
+                requirements
+                    .get(tag)
+                    .into_iter()
+                    .flatten()
+                    .filter_map(move |&ex_name| {
+                        if n.has_attribute(ex_name) {
+                            None
+                        } else {
+                            let pos = doc.text_pos_at(n_start);
+
+                            Some(Violation::new(path, pos.row, pos.col, tag, ex_name.name()))
+                        }
+                    })
             })
             .for_each(|violation| {
                 meets_requirements = false;
