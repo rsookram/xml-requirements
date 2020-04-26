@@ -99,17 +99,17 @@ fn find_violations(
     requirements: &BTreeMap<&str, Vec<ResolvedName>>,
 ) -> Vec<Violation> {
     let tag = node.tag_name().name();
-    let n_start = node.range().start;
 
     requirements
         .get(tag)
         .into_iter()
         .flatten()
-        .filter_map(move |name| {
+        .filter_map(|name| {
             if node.has_attribute(name.expanded) {
                 None
             } else {
-                let pos = node.document().text_pos_at(n_start);
+                let start = node.range().start;
+                let pos = node.document().text_pos_at(start);
 
                 Some(Violation::new(path, pos.row, pos.col, tag, &name.raw))
             }
