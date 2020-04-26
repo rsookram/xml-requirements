@@ -15,6 +15,7 @@ pub struct Rule {
 pub struct Attribute {
     pub ns: Option<String>,
     pub name: String,
+    pub raw: String,
 }
 
 fn vec_attribute<'de, D>(deserializer: D) -> Result<Vec<Attribute>, D::Error>
@@ -41,5 +42,6 @@ where
     Ok(Attribute {
         ns,
         name: name.to_string(),
+        raw: s.to_string(),
     })
 }

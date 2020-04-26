@@ -31,7 +31,7 @@ impl fmt::Display for Violation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "{}:{}:{} {} missing {} attribute",
+            "{}:{}:{} {} missing {}",
             self.path.to_str().unwrap(),
             self.line_num,
             self.col_num,

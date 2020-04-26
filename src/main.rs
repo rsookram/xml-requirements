@@ -23,6 +23,11 @@ struct Opt {
     files: Vec<PathBuf>,
 }
 
+struct ResolvedName<'a> {
+    raw: String,
+    expanded: ExpandedName<'a>,
+}
+
 fn main() {
     let opt = Opt::from_args();
 
@@ -66,7 +71,7 @@ fn find_violations(
     path: &PathBuf,
     doc: &Document,
     node: &Node,
-    requirements: &BTreeMap<&str, Vec<ExpandedName>>,
+    requirements: &BTreeMap<&str, Vec<ResolvedName>>,
 ) -> Vec<Violation> {
     let tag = node.tag_name().name();
     let n_start = node.range().start;
@@ -75,27 +80,32 @@ fn find_violations(
         .get(tag)
         .into_iter()
         .flatten()
-        .filter_map(move |&ex_name| {
-            if node.has_attribute(ex_name) {
+        .filter_map(move |name| {
+            if node.has_attribute(name.expanded) {
                 None
             } else {
                 let pos = doc.text_pos_at(n_start);
 
-                Some(Violation::new(path, pos.row, pos.col, tag, ex_name.name()))
+                Some(Violation::new(path, pos.row, pos.col, tag, &name.raw))
             }
         })
         .collect()
 }
 
-fn resolve<'a>(attr: &'a Attribute, doc: &'a Document) -> ExpandedName<'a> {
+fn resolve<'a>(attr: &'a Attribute, doc: &'a Document) -> ResolvedName<'a> {
     let ns = attr
         .ns
         .as_ref()
         .and_then(|ns| doc.root_element().lookup_namespace_uri(Some(ns)));
 
     let name = attr.name.as_str();
-    match ns {
+    let expanded = match ns {
         Some(ns) => ExpandedName::from((ns, name)),
         None => ExpandedName::from(name),
+    };
+
+    ResolvedName {
+        raw: attr.raw.to_string(),
+        expanded,
     }
 }
