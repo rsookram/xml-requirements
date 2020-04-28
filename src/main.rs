@@ -29,17 +29,17 @@ struct ResolvedName<'a> {
     expanded: ExpandedName<'a>,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Opt::from_args();
 
-    let conf_str = fs::read_to_string(&opt.config).unwrap();
-    let config = config::from_str(&conf_str).unwrap();
+    let conf_str = fs::read_to_string(&opt.config)?;
+    let config = config::from_str(&conf_str)?;
 
     let mut meets_requirements = true;
     for path in &opt.files {
-        let content = fs::read_to_string(&path).unwrap();
+        let content = fs::read_to_string(&path)?;
 
-        let doc = Document::parse(&content).unwrap();
+        let doc = Document::parse(&content)?;
 
         let requirements = get_requirements(&config, &doc);
 
@@ -55,6 +55,8 @@ fn main() {
     if !meets_requirements {
         std::process::exit(1);
     }
+
+    Ok(())
 }
 
 fn get_requirements<'a>(
