@@ -32,7 +32,7 @@ impl fmt::Display for Violation {
         write!(
             f,
             "{}:{}:{} {} missing {}",
-            self.path.to_str().unwrap(),
+            self.path.to_string_lossy(),
             self.line_num,
             self.col_num,
             self.tag,
