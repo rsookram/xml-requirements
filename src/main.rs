@@ -33,7 +33,7 @@ fn main() {
     let opt = Opt::from_args();
 
     let conf_str = fs::read_to_string(&opt.config).unwrap();
-    let config = config::from_str(&conf_str);
+    let config = config::from_str(&conf_str).unwrap();
 
     let mut meets_requirements = true;
     for path in &opt.files {
