@@ -32,14 +32,33 @@ struct ResolvedName<'a> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Opt::from_args();
 
-    let conf_str = fs::read_to_string(&opt.config)?;
-    let config = config::from_str(&conf_str)?;
+    let conf_str = fs::read_to_string(&opt.config)
+        .map_err(|err| format!("Failed to read {}: {}", opt.config.to_string_lossy(), err))?;
+    let config = config::from_str(&conf_str).map_err(|err| {
+        format!(
+            "Failed to parse config {}: {}",
+            opt.config.to_string_lossy(),
+            err
+        )
+    })?;
 
     let mut meets_requirements = true;
     for path in &opt.files {
-        let content = fs::read_to_string(&path)?;
+        let content = fs::read_to_string(&path).map_err(|err| {
+            format!(
+                "Failed to read XML file {}: {}",
+                path.to_string_lossy(),
+                err
+            )
+        })?;
 
-        let doc = Document::parse(&content)?;
+        let doc = Document::parse(&content).map_err(|err| {
+            format!(
+                "Failed to parse XML file {}: {}",
+                path.to_string_lossy(),
+                err
+            )
+        })?;
 
         let requirements = get_requirements(&config, &doc);
 
