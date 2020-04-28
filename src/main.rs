@@ -1,8 +1,10 @@
 mod config;
+mod error;
 mod violation;
 
 use config::Attribute;
 use config::Rule;
+use error::Error;
 use roxmltree::Document;
 use roxmltree::ExpandedName;
 use roxmltree::Node;
@@ -29,36 +31,32 @@ struct ResolvedName<'a> {
     expanded: ExpandedName<'a>,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let opt = Opt::from_args();
 
+    match run(&opt) {
+        Ok(meets_requirements) => {
+            if !meets_requirements {
+                std::process::exit(1)
+            }
+        }
+        Err(err) => eprintln!("{}", err),
+    }
+}
+
+fn run(opt: &Opt) -> Result<bool, Error> {
     let conf_str = fs::read_to_string(&opt.config)
-        .map_err(|err| format!("Failed to read {}: {}", opt.config.to_string_lossy(), err))?;
-    let config = config::from_str(&conf_str).map_err(|err| {
-        format!(
-            "Failed to parse config {}: {}",
-            opt.config.to_string_lossy(),
-            err
-        )
-    })?;
+        .map_err(|err| Error::ReadConfig(opt.config.clone(), err.to_string()))?;
+    let config = config::from_str(&conf_str)
+        .map_err(|err| Error::ParseConfig(opt.config.clone(), err.to_string()))?;
 
     let mut meets_requirements = true;
     for path in &opt.files {
-        let content = fs::read_to_string(&path).map_err(|err| {
-            format!(
-                "Failed to read XML file {}: {}",
-                path.to_string_lossy(),
-                err
-            )
-        })?;
+        let content = fs::read_to_string(&path)
+            .map_err(|err| Error::ReadXML(path.clone(), err.to_string()))?;
 
-        let doc = Document::parse(&content).map_err(|err| {
-            format!(
-                "Failed to parse XML file {}: {}",
-                path.to_string_lossy(),
-                err
-            )
-        })?;
+        let doc = Document::parse(&content)
+            .map_err(|err| Error::ParseXML(path.clone(), err.to_string()))?;
 
         let requirements = get_requirements(&config, &doc);
 
@@ -71,11 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
     }
 
-    if !meets_requirements {
-        std::process::exit(1);
-    }
-
-    Ok(())
+    Ok(meets_requirements)
 }
 
 fn get_requirements<'a>(
