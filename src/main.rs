@@ -1,14 +1,12 @@
 mod config;
 mod error;
+mod requirements;
 mod violation;
 
-use config::Attribute;
-use config::Config;
 use error::Error;
+use requirements::Requirements;
 use roxmltree::Document;
-use roxmltree::ExpandedName;
 use roxmltree::Node;
-use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -24,11 +22,6 @@ struct Opt {
     /// XML files to check
     #[structopt(name = "FILE", parse(from_os_str))]
     files: Vec<PathBuf>,
-}
-
-struct ResolvedName<'a> {
-    raw: String,
-    expanded: ExpandedName<'a>,
 }
 
 fn main() {
@@ -58,7 +51,7 @@ fn run(opt: &Opt) -> Result<bool, Error> {
         let doc = Document::parse(&content)
             .map_err(|err| Error::ParseXML(path.clone(), err.to_string()))?;
 
-        let requirements = get_requirements(&config, &doc);
+        let requirements = requirements::resolve(&config, &doc);
 
         doc.descendants()
             .flat_map(|n| find_violations(path, &n, &requirements))
@@ -72,47 +65,7 @@ fn run(opt: &Opt) -> Result<bool, Error> {
     Ok(meets_requirements)
 }
 
-fn get_requirements<'a>(
-    config: &'a Config,
-    doc: &'a Document,
-) -> BTreeMap<&'a str, Vec<ResolvedName<'a>>> {
-    config
-        .iter()
-        .map(|(tag, rule)| {
-            let names: Vec<_> = rule
-                .required
-                .iter()
-                .map(|attr| resolve(attr, doc))
-                .collect();
-
-            (tag.as_str(), names)
-        })
-        .collect()
-}
-
-fn resolve<'a>(attr: &'a Attribute, doc: &'a Document) -> ResolvedName<'a> {
-    let ns = attr
-        .ns
-        .as_ref()
-        .and_then(|ns| doc.root_element().lookup_namespace_uri(Some(ns)));
-
-    let name = attr.name.as_str();
-    let expanded = match ns {
-        Some(ns) => ExpandedName::from((ns, name)),
-        None => ExpandedName::from(name),
-    };
-
-    ResolvedName {
-        raw: attr.raw.to_string(),
-        expanded,
-    }
-}
-
-fn find_violations(
-    path: &PathBuf,
-    node: &Node,
-    requirements: &BTreeMap<&str, Vec<ResolvedName>>,
-) -> Vec<Violation> {
+fn find_violations(path: &PathBuf, node: &Node, requirements: &Requirements) -> Vec<Violation> {
     let tag = node.tag_name().name();
 
     requirements
