@@ -2,7 +2,7 @@ use serde::Deserialize;
 use serde::Deserializer;
 use std::collections::BTreeMap;
 
-type Config = BTreeMap<String, Rule>;
+pub type Config = BTreeMap<String, Rule>;
 
 pub fn from_str(s: &str) -> Result<Config, impl std::error::Error> {
     toml::from_str(s)

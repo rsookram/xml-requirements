@@ -3,7 +3,7 @@ mod error;
 mod violation;
 
 use config::Attribute;
-use config::Rule;
+use config::Config;
 use error::Error;
 use roxmltree::Document;
 use roxmltree::ExpandedName;
@@ -73,7 +73,7 @@ fn run(opt: &Opt) -> Result<bool, Error> {
 }
 
 fn get_requirements<'a>(
-    config: &'a BTreeMap<String, Rule>,
+    config: &'a Config,
     doc: &'a Document,
 ) -> BTreeMap<&'a str, Vec<ResolvedName<'a>>> {
     config
