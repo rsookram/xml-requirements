@@ -14,6 +14,7 @@ pub struct Rule {
     pub required: Vec<Attribute>,
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Attribute {
     pub ns: Option<String>,
     pub name: String,
@@ -46,4 +47,35 @@ where
         name: name.to_string(),
         raw: s.to_string(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_config() -> Result<(), Box<dyn std::error::Error>> {
+        let config_str = "";
+
+        let config = from_str(config_str)?;
+
+        assert!(config.is_empty());
+
+        Ok(())
+    }
+
+    #[test]
+    fn tag_with_no_requirements() -> Result<(), Box<dyn std::error::Error>> {
+        let config_str = r#"
+            [LinearLayout]
+            required = []
+        "#;
+
+        let config = from_str(config_str)?;
+
+        assert_eq!(1, config.keys().len());
+        assert_eq!(Vec::<Attribute>::new(), config["LinearLayout"].required);
+
+        Ok(())
+    }
 }
