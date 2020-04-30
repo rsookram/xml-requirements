@@ -16,24 +16,22 @@ impl std::error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::ReadConfig(path, cause) => write_error(
-                f,
-                &format!("Failed to read {}", path.to_string_lossy()),
-                cause,
-            ),
+            Error::ReadConfig(path, cause) => {
+                write_error(f, &format!("Failed to read {}", path.display()), cause)
+            }
             Error::ParseConfig(path, cause) => write_error(
                 f,
-                &format!("Failed to parse config {}", path.to_string_lossy()),
+                &format!("Failed to parse config {}", path.display()),
                 cause,
             ),
             Error::ReadXML(path, cause) => write_error(
                 f,
-                &format!("Failed to read XML file {}", path.to_string_lossy()),
+                &format!("Failed to read XML file {}", path.display()),
                 cause,
             ),
             Error::ParseXML(path, cause) => write_error(
                 f,
-                &format!("Failed to parse XML file {}", path.to_string_lossy()),
+                &format!("Failed to parse XML file {}", path.display()),
                 cause,
             ),
         }
