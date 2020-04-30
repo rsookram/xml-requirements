@@ -40,3 +40,26 @@ impl fmt::Display for Violation {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display() {
+        let v = Violation::new(
+            &"/path/to/file.xml".into(),
+            3,
+            8,
+            "LinearLayout",
+            "android:orientation",
+        );
+
+        let actual = format!("{}", v);
+
+        assert_eq!(
+            "/path/to/file.xml:3:8 LinearLayout missing android:orientation",
+            actual
+        );
+    }
+}
