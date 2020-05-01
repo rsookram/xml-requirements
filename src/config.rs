@@ -9,7 +9,7 @@ pub fn from_str(s: &str) -> Result<Config, impl std::error::Error> {
     toml::from_str(s)
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct Rule {
     #[serde(deserialize_with = "vec_attribute")]
     pub required: Vec<Attribute>,
@@ -84,8 +84,7 @@ mod tests {
 
         let config = from_str(config_str)?;
 
-        assert_eq!(1, config.keys().len());
-        assert_eq!(Vec::<Attribute>::new(), config["LinearLayout"].required);
+        assert_eq!(new_config(vec![("LinearLayout", vec![])]), config);
 
         Ok(())
     }
@@ -99,11 +98,9 @@ mod tests {
 
         let config = from_str(config_str)?;
 
-        assert_eq!(1, config.keys().len());
-
         assert_eq!(
-            vec!["android:orientation".parse::<Attribute>()?],
-            config["LinearLayout"].required
+            new_config(vec![("LinearLayout", vec!["android:orientation"])]),
+            config
         );
 
         Ok(())
@@ -121,24 +118,31 @@ mod tests {
 
         let config = from_str(config_str)?;
 
-        assert_eq!(2, config.keys().len());
-
         assert_eq!(
-            vec![
-                "android:orientation".parse::<Attribute>()?,
-                "tools:elevation".parse::<Attribute>()?,
-            ],
-            config["LinearLayout"].required
-        );
-
-        assert_eq!(
-            vec![
-                "android:hint".parse::<Attribute>()?,
-                "style".parse::<Attribute>()?,
-            ],
-            config["EditText"].required
+            new_config(vec![
+                (
+                    "LinearLayout",
+                    vec!["android:orientation", "tools:elevation"]
+                ),
+                ("EditText", vec!["android:hint", "style"]),
+            ]),
+            config
         );
 
         Ok(())
+    }
+
+    fn new_config(tag_rules: Vec<(&str, Vec<&str>)>) -> Config {
+        tag_rules
+            .into_iter()
+            .map(|(tag, attrs)| {
+                (
+                    tag.to_string(),
+                    Rule {
+                        required: attrs.into_iter().map(|s| s.parse().unwrap()).collect(),
+                    },
+                )
+            })
+            .collect()
     }
 }

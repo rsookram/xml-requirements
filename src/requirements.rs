@@ -92,13 +92,17 @@ mod tests {
 
         let reqs = resolve(&config, &doc);
 
-        assert_eq!(1, reqs.keys().len());
         assert_eq!(
-            vec![ResolvedName {
-                raw: "android:hint".to_string(),
-                expanded: ("http://schemas.android.com/apk/res/android", "hint").into()
-            }],
-            reqs["EditText"]
+            vec![(
+                "EditText",
+                vec![new_name(
+                    "android:hint",
+                    ("http://schemas.android.com/apk/res/android", "hint")
+                )],
+            )]
+            .into_iter()
+            .collect::<Requirements>(),
+            reqs
         );
 
         Ok(())
@@ -126,15 +130,20 @@ mod tests {
 
         let reqs = resolve(&config, &doc);
 
-        assert_eq!(1, reqs.keys().len());
         assert_eq!(
-            vec![ResolvedName {
-                raw: "style".to_string(),
-                expanded: ("style").into()
-            }],
-            reqs["Button"]
+            vec![("Button", vec![new_name("style", "style")])]
+                .into_iter()
+                .collect::<Requirements>(),
+            reqs
         );
 
         Ok(())
+    }
+
+    fn new_name<'a>(raw: &str, expanded: impl Into<ExpandedName<'a>>) -> ResolvedName<'a> {
+        ResolvedName {
+            raw: raw.to_string(),
+            expanded: expanded.into(),
+        }
     }
 }
