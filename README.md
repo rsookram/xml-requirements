@@ -1,5 +1,16 @@
 # xml-requirements
 
+## Building
+
+xml-requirements can be built from source by cloning this repository and using
+Cargo.
+
+```
+$ git clone https://github.com/rsookram/xml-requirements
+$ cd xml-requirements
+$ cargo build --release
+```
+
 ## License
 
 Licensed under either of
