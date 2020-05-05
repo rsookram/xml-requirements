@@ -13,13 +13,13 @@ use structopt::StructOpt;
 use violation::Violation;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "xml-requirements")]
+#[structopt(name = "xml-requirements", author, about)]
 struct Opt {
-    /// Configuration file
+    /// Path to toml configuration file
     #[structopt(short, long, parse(from_os_str))]
     config: PathBuf,
 
-    /// XML files to check
+    /// Path of XML files to check
     #[structopt(name = "FILE", parse(from_os_str))]
     files: Vec<PathBuf>,
 }
