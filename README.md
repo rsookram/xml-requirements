@@ -1,5 +1,22 @@
 # xml-requirements
 
+## Usage
+
+```
+USAGE:
+    xml-requirements --config <config> [FILE]...
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -c, --config <config>    Path to toml configuration file
+
+ARGS:
+    <FILE>...    Path of XML files to check
+```
+
 ## Building
 
 xml-requirements can be built from source by cloning this repository and using
