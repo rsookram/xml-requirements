@@ -15,7 +15,7 @@ use violation::Violation;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "xml-requirements", author, about)]
 struct Opt {
-    /// Path to toml configuration file
+    /// Path to TOML configuration file
     #[structopt(short, long, parse(from_os_str))]
     config: PathBuf,
 

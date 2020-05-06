@@ -132,6 +132,40 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn readme_example() -> Result<(), Box<dyn std::error::Error>> {
+        let config_str = r#"
+            # All <LinearLayout> tags must have an "android:orientation" attribute
+            [LinearLayout]
+            required = [
+              # If "android:orientation" isn't present in any of the specified files, then
+              # a warning will be printed
+              "android:orientation",
+            ]
+
+            [TextView]
+            required = [
+              "style", # For attributes without a namespace, only include the name
+
+              # Every value in a `required` array must be present in the checked files. So
+              # every TextView must contain both "style" AND "android:textAppearance".
+              "android:textAppearance",
+            ]
+        "#;
+
+        let config = from_str(config_str)?;
+
+        assert_eq!(
+            new_config(vec![
+                ("LinearLayout", vec!["android:orientation"]),
+                ("TextView", vec!["style", "android:textAppearance"]),
+            ]),
+            config
+        );
+
+        Ok(())
+    }
+
     fn new_config(tag_rules: Vec<(&str, Vec<&str>)>) -> Config {
         tag_rules
             .into_iter()

@@ -13,6 +13,47 @@ cargo install --git https://github.com/rsookram/xml-requirements
 
 ## Usage
 
+The first thing you'll need is a configuration file which tells
+xml-requirements what to look for. This is a
+[TOML](https://github.com/toml-lang/toml) file which specifies a top-level
+table where the keys are the XML tags to check, and the values are a key-value
+pair with:
+
+  - `required` as the key and
+  - an array of strings as the value
+
+The strings are the attributes which must be present.
+
+Here's what a configuration file may look like:
+
+```toml
+# All <LinearLayout> tags must have an "android:orientation" attribute
+[LinearLayout]
+required = [
+  # If "android:orientation" isn't present in any of the specified files, then
+  # a warning will be printed
+  "android:orientation",
+]
+
+[TextView]
+required = [
+  "style", # For attributes without a namespace, only include the name
+
+  # Every value in a `required` array must be present in the checked files. So
+  # every TextView must contain both "style" AND "android:textAppearance".
+  "android:textAppearance",
+]
+```
+
+With that, here's an example of how to run xml-requirements from the command
+line:
+
+```shell
+$ xml-requirements --config path/to/config.toml path/to/file0.xml path/to/file1.xml
+```
+
+And the full `--help` output for more info:
+
 ```
 USAGE:
     xml-requirements --config <config> [FILE]...
@@ -22,7 +63,7 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -c, --config <config>    Path to toml configuration file
+    -c, --config <config>    Path to TOML configuration file
 
 ARGS:
     <FILE>...    Path of XML files to check
