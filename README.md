@@ -1,5 +1,9 @@
 # xml-requirements
 
+xml-requirements is an XML linter which checks that user-specified attributes
+are included. It's useful to run as a pre-commit hook or on CI to make sure
+that you aren't forgetting anything.
+
 ## Installation
 
 Currently, pre-compiled binaries of xml-requirements aren't being distributed.
@@ -49,7 +53,7 @@ With that, here's an example of how to run xml-requirements from the command
 line:
 
 ```shell
-$ xml-requirements --config path/to/config.toml path/to/file0.xml path/to/file1.xml
+xml-requirements --config path/to/config.toml path/to/file0.xml path/to/file1.xml
 ```
 
 And the full `--help` output for more info:
@@ -75,9 +79,9 @@ xml-requirements can be built from source by cloning this repository and using
 Cargo.
 
 ```
-$ git clone https://github.com/rsookram/xml-requirements
-$ cd xml-requirements
-$ cargo build --release
+git clone https://github.com/rsookram/xml-requirements
+cd xml-requirements
+cargo build --release
 ```
 
 ## License
