@@ -1,5 +1,16 @@
 # xml-requirements
 
+## Installation
+
+Currently, pre-compiled binaries of xml-requirements aren't being distributed.
+You can install it with
+[Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) by
+running
+
+```
+cargo install --git https://github.com/rsookram/xml-requirements
+```
+
 ## Usage
 
 ```
