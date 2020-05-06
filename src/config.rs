@@ -2,6 +2,7 @@ use serde::Deserialize;
 use serde::Deserializer;
 use std::collections::BTreeMap;
 use std::str::FromStr;
+use std::string::ToString;
 
 pub type Config = BTreeMap<String, Rule>;
 
@@ -28,7 +29,7 @@ impl FromStr for Attribute {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parts = s.rsplitn(2, ':');
         let name = parts.next().expect("not possible");
-        let ns = parts.next().map(std::string::ToString::to_string);
+        let ns = parts.next().map(ToString::to_string);
 
         Ok(Attribute {
             ns,
