@@ -42,17 +42,17 @@ fn main() {
 
 fn run(opt: &Opt) -> Result<bool, Error> {
     let conf_str = fs::read_to_string(&opt.config)
-        .map_err(|err| Error::ReadConfig(opt.config.clone(), err.to_string()))?;
+        .map_err(|err| Error::ReadConfig(opt.config.clone(), Box::new(err)))?;
     let config = config::from_str(&conf_str)
-        .map_err(|err| Error::ParseConfig(opt.config.clone(), err.to_string()))?;
+        .map_err(|err| Error::ParseConfig(opt.config.clone(), Box::new(err)))?;
 
     let mut meets_requirements = true;
     for path in &opt.files {
-        let content = fs::read_to_string(&path)
-            .map_err(|err| Error::ReadXML(path.clone(), err.to_string()))?;
+        let content =
+            fs::read_to_string(&path).map_err(|err| Error::ReadXML(path.clone(), Box::new(err)))?;
 
         let doc = Document::parse(&content)
-            .map_err(|err| Error::ParseXML(path.clone(), err.to_string()))?;
+            .map_err(|err| Error::ParseXML(path.clone(), Box::new(err)))?;
 
         let requirements = requirements::resolve(&config, &doc);
 

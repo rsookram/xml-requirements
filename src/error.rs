@@ -1,7 +1,7 @@
 use std::fmt;
 use std::path::PathBuf;
 
-type Cause = String;
+type Cause = Box<dyn std::error::Error>;
 
 #[derive(Debug)]
 pub enum Error {
@@ -16,23 +16,25 @@ impl std::error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::ReadConfig(path, cause) => {
-                write_error(f, &format!("Failed to read `{}`", path.display()), cause)
-            }
+            Error::ReadConfig(path, cause) => write_error(
+                f,
+                &format!("Failed to read `{}`", path.display()),
+                &cause.to_string(),
+            ),
             Error::ParseConfig(path, cause) => write_error(
                 f,
                 &format!("Failed to parse config `{}`", path.display()),
-                cause,
+                &cause.to_string(),
             ),
             Error::ReadXML(path, cause) => write_error(
                 f,
                 &format!("Failed to read XML file `{}`", path.display()),
-                cause,
+                &cause.to_string(),
             ),
             Error::ParseXML(path, cause) => write_error(
                 f,
                 &format!("Failed to parse XML file `{}`", path.display()),
-                cause,
+                &cause.to_string(),
             ),
         }
     }
