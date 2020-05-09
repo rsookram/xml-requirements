@@ -17,21 +17,21 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::ReadConfig(path, cause) => {
-                write_error(f, &format!("Failed to read {}", path.display()), cause)
+                write_error(f, &format!("Failed to read `{}`", path.display()), cause)
             }
             Error::ParseConfig(path, cause) => write_error(
                 f,
-                &format!("Failed to parse config {}", path.display()),
+                &format!("Failed to parse config `{}`", path.display()),
                 cause,
             ),
             Error::ReadXML(path, cause) => write_error(
                 f,
-                &format!("Failed to read XML file {}", path.display()),
+                &format!("Failed to read XML file `{}`", path.display()),
                 cause,
             ),
             Error::ParseXML(path, cause) => write_error(
                 f,
-                &format!("Failed to parse XML file {}", path.display()),
+                &format!("Failed to parse XML file `{}`", path.display()),
                 cause,
             ),
         }
