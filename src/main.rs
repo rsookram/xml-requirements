@@ -8,6 +8,8 @@ use requirements::Requirements;
 use roxmltree::Document;
 use roxmltree::Node;
 use std::fs;
+use std::io;
+use std::io::Write;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use violation::Violation;
@@ -26,8 +28,10 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
+    let stdout = std::io::stdout();
+    let mut stdout = stdout.lock();
 
-    match run(&opt) {
+    match run(&opt, &mut stdout) {
         Ok(meets_requirements) => {
             if !meets_requirements {
                 std::process::exit(1)
@@ -40,7 +44,7 @@ fn main() {
     }
 }
 
-fn run(opt: &Opt) -> Result<bool, Error> {
+fn run(opt: &Opt, mut w: impl Write) -> Result<bool, Error> {
     let conf_str = fs::read_to_string(&opt.config)
         .map_err(|err| Error::ReadConfig(opt.config.clone(), Box::new(err)))?;
     let config = config::from_str(&conf_str)
@@ -56,13 +60,26 @@ fn run(opt: &Opt) -> Result<bool, Error> {
 
         let requirements = requirements::resolve(&config, &doc);
 
-        doc.descendants()
+        let result = doc
+            .descendants()
             .flat_map(|n| find_violations(path, &n, &requirements))
-            .for_each(|violation| {
+            .try_for_each(|violation| {
                 meets_requirements = false;
 
-                println!("{}", violation)
+                writeln!(w, "{}", violation)
             });
+
+        match result {
+            Ok(_) => {}
+            Err(e) if e.kind() == io::ErrorKind::BrokenPipe => {
+                if !meets_requirements {
+                    // Return early since nothing more can be printed and
+                    // violations have already been found
+                    return Ok(false);
+                }
+            }
+            Err(e) => return Err(Error::WriteOutput(Box::new(e))),
+        }
     }
 
     Ok(meets_requirements)

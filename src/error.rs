@@ -9,6 +9,7 @@ pub enum Error {
     ParseConfig(PathBuf, Cause),
     ReadXML(PathBuf, Cause),
     ParseXML(PathBuf, Cause),
+    WriteOutput(Cause),
 }
 
 impl std::error::Error for Error {}
@@ -36,6 +37,9 @@ impl fmt::Display for Error {
                 &format!("Failed to parse XML file `{}`", path.display()),
                 &cause.to_string(),
             ),
+            Error::WriteOutput(cause) => {
+                write_error(f, "Failed to write output", &cause.to_string())
+            }
         }
     }
 }
