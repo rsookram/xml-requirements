@@ -1,8 +1,8 @@
 # xml-requirements
 
 xml-requirements is an XML linter which checks that user-specified attributes
-are included. It's useful to run as a pre-commit hook or on CI to make sure
-that you aren't forgetting anything.
+are included. It's useful to run as a [pre-commit hook](pre-commit) or on CI to
+make sure that you aren't forgetting anything.
 
 ## Installation
 

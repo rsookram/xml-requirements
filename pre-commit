@@ -1,0 +1,10 @@
+#!/bin/sh
+# https://github.com/rsookram/xml-requirements pre-commit hook
+
+CONFIG='path/to/config.toml'
+
+if ! git diff --name-only --cached --diff-filter=ACM -z '*.xml' |
+  xargs --null xml-requirements -c "$CONFIG"
+then
+  exit 1;
+fi
