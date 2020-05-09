@@ -17,33 +17,29 @@ impl std::error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::ReadConfig(path, cause) => write_error(
-                f,
-                &format!("Failed to read `{}`", path.display()),
-                &cause.to_string(),
-            ),
+            Error::ReadConfig(path, cause) => {
+                write_error(f, &format!("Failed to read `{}`", path.display()), cause)
+            }
             Error::ParseConfig(path, cause) => write_error(
                 f,
                 &format!("Failed to parse config `{}`", path.display()),
-                &cause.to_string(),
+                cause,
             ),
             Error::ReadXML(path, cause) => write_error(
                 f,
                 &format!("Failed to read XML file `{}`", path.display()),
-                &cause.to_string(),
+                cause,
             ),
             Error::ParseXML(path, cause) => write_error(
                 f,
                 &format!("Failed to parse XML file `{}`", path.display()),
-                &cause.to_string(),
+                cause,
             ),
-            Error::WriteOutput(cause) => {
-                write_error(f, "Failed to write output", &cause.to_string())
-            }
+            Error::WriteOutput(cause) => write_error(f, "Failed to write output", cause),
         }
     }
 }
 
-fn write_error(f: &mut fmt::Formatter, msg: &str, cause: &str) -> fmt::Result {
+fn write_error(f: &mut fmt::Formatter, msg: &str, cause: &Cause) -> fmt::Result {
     write!(f, "Error: {}\n\nCause: {}", msg, cause)
 }
