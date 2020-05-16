@@ -84,6 +84,19 @@ cd xml-requirements
 cargo build --release
 ```
 
+## Dependencies
+
+The following crates are used to simplify parsing:
+
+- [`roxmltree`](https://crates.io/crates/roxmltree) for XML
+- [`structopt`](https://crates.io/crates/structopt) for command line arguments
+- [`serde`](https://crates.io/crates/serde) and
+  [`toml`](https://crates.io/crates/toml) are for the configuration file.
+
+[`assert_cmd`](https://crates.io/crates/assert_cmd) and
+[`tempfile`](https://crates.io/crates/tempfile) are both used to simplify
+integration testing.
+
 ## License
 
 Licensed under either of
