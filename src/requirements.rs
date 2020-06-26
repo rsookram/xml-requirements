@@ -9,7 +9,7 @@ pub type Requirements<'a> = BTreeMap<&'a str, Vec<ResolvedName<'a>>>;
 #[derive(Debug, PartialEq)]
 pub struct ResolvedName<'a> {
     pub raw: String,
-    pub expanded: ExpandedName<'a>,
+    pub expanded: ExpandedName<'a, 'a>,
 }
 
 pub fn resolve<'a>(config: &'a Config, doc: &'a Document) -> Requirements<'a> {
@@ -140,7 +140,7 @@ mod tests {
         Ok(())
     }
 
-    fn new_name<'a>(raw: &str, expanded: impl Into<ExpandedName<'a>>) -> ResolvedName<'a> {
+    fn new_name<'a>(raw: &str, expanded: impl Into<ExpandedName<'a, 'a>>) -> ResolvedName<'a> {
         ResolvedName {
             raw: raw.to_string(),
             expanded: expanded.into(),
