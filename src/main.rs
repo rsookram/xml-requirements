@@ -1,9 +1,11 @@
 mod config;
 mod error;
+mod opt;
 mod requirements;
 mod violation;
 
 use error::Error;
+use opt::Opt;
 use requirements::Requirements;
 use roxmltree::Document;
 use roxmltree::Node;
@@ -13,18 +15,6 @@ use std::io::Write;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use violation::Violation;
-
-#[derive(StructOpt, Debug)]
-#[structopt(name = "xml-requirements", author, about)]
-struct Opt {
-    /// Path to TOML configuration file
-    #[structopt(short, long, parse(from_os_str))]
-    config: PathBuf,
-
-    /// Path of XML files to check
-    #[structopt(name = "FILE", parse(from_os_str))]
-    files: Vec<PathBuf>,
-}
 
 fn main() {
     let opt = Opt::from_args();
