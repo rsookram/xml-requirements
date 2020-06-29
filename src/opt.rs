@@ -1,8 +1,9 @@
+mod error;
+
+use error::Error;
 use pico_args::Arguments;
-use std::convert::From;
 use std::convert::Infallible;
 use std::ffi::OsStr;
-use std::fmt;
 use std::path::PathBuf;
 use std::process;
 
@@ -59,33 +60,6 @@ impl Opt {
             Some(p) => Ok(p),
             None => Ok(args.value_from_os_str("-c", into_path_buf)?),
         }
-    }
-}
-
-#[derive(Debug)]
-enum Error {
-    DuplicateArg(String),
-    Parse(pico_args::Error),
-}
-
-impl std::error::Error for Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::DuplicateArg(arg) => writeln!(
-                f,
-                "The argument '{}' was provided more than once, but cannot be used multiple times",
-                arg
-            ),
-            Error::Parse(err) => writeln!(f, "{}", err),
-        }
-    }
-}
-
-impl From<pico_args::Error> for Error {
-    fn from(err: pico_args::Error) -> Self {
-        Error::Parse(err)
     }
 }
 
