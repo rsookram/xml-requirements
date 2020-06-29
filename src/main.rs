@@ -13,7 +13,6 @@ use std::fs;
 use std::io;
 use std::io::Write;
 use std::path::PathBuf;
-use structopt::StructOpt;
 use violation::Violation;
 
 fn main() {

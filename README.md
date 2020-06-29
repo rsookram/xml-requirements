@@ -89,7 +89,7 @@ cargo build --release
 The following crates are used to simplify parsing:
 
 - [`roxmltree`](https://crates.io/crates/roxmltree) for XML
-- [`structopt`](https://crates.io/crates/structopt) for command line arguments
+- [`pico-args`](https://crates.io/crates/pico-args) for command line arguments
 - [`serde`](https://crates.io/crates/serde) and
   [`toml`](https://crates.io/crates/toml) are for the configuration file.
 
